@@ -11,20 +11,21 @@ from django.http import Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import escape
-from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 
-from base.models import Usuario
+from base.models import Usuario1
 from john import settings
 
 
-@admin.register(Usuario)
-class UsuarioAdmin(admin.ModelAdmin):
+@admin.register(Usuario1)
+class UserAdmin(admin.ModelAdmin):
     add_form_template = 'admin/auth/user/add_form.html'
     change_user_password_template = None
     fieldsets = (
-        (None, {'fields': ('password',)}),
-        (_('Personal info'), {'fields': ('name', 'app', 'password_app', 'email')}),
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('App info'), {'fields': ('app', 'password_app')}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
@@ -33,16 +34,16 @@ class UsuarioAdmin(admin.ModelAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('password1', 'password2'),
+            'fields': ('username', 'password1', 'password2'),
         }),
     )
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
-    list_display = ('email', 'name', 'app', 'is_staff')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff')
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
-    search_fields = ('name', 'email')
-    ordering = ('name',)
+    search_fields = ('username', 'first_name', 'last_name', 'email')
+    ordering = ('username',)
     filter_horizontal = ('groups', 'user_permissions',)
 
     def get_fieldsets(self, request, obj=None):
@@ -98,8 +99,10 @@ class UsuarioAdmin(admin.ModelAdmin):
             raise PermissionDenied
         if extra_context is None:
             extra_context = {}
+        username_field = self.model._meta.get_field(self.model.USERNAME_FIELD)
         defaults = {
             'auto_populated_fields': (),
+            'username_help_text': username_field.help_text,
         }
         extra_context.update(defaults)
         return super().add_view(request, form_url, extra_context)

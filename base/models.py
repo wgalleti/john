@@ -1,11 +1,30 @@
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.models import PermissionsMixin, AbstractUser
 from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from base.managers import UsuarioManager
+
+from django.contrib.auth.models import User
+
+
+class Usuario1(AbstractUser):
+    GATEC = 1
+    SAPIENS = 2
+    OUTROS = 3
+
+    APP = (
+        (GATEC, 'Gatec'),
+        (SAPIENS, 'Sapiens'),
+        (OUTROS, 'Outros'),
+    )
+    app = models.IntegerField(_('app'), default=3, choices=APP)
+    password_app = models.CharField(_('password app'), max_length=100, blank=True, null=True)
+
+    class Meta(AbstractUser.Meta):
+        swappable = 'AUTH_USER_MODEL'
 
 
 class Usuario(AbstractBaseUser, PermissionsMixin):
@@ -72,8 +91,6 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['app']
-
-
 
     class Meta:
         verbose_name = _('user')
